@@ -1,1 +1,1 @@
-# game
+# Game Rắn săn mồi.
