@@ -11,7 +11,7 @@ and may not be redistributed without written permission.*/
 #include <SDL_image.h>
 #include <stdio.h>
 #include <string>
-
+#include <SDL_mixer.h>
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -37,13 +37,19 @@ SDL_Renderer* gRenderer = NULL;
 //Current displayed texture
 SDL_Texture* gTexture = NULL;
 
+//The music that will be played
+Mix_Music* gMusic = NULL;
+
+//The sound effects that will be used
+Mix_Chunk* gHigh = NULL;
+
 bool init()
 {
 	//Initialization flag
 	bool success = true;
 
 	//Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 	{
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
 		success = false;
@@ -65,8 +71,8 @@ bool init()
 		}
 		else
 		{
-			//Create renderer for window
-			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+			//Create vsynced renderer for window
+			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 			if (gRenderer == NULL)
 			{
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
@@ -82,6 +88,13 @@ bool init()
 				if (!(IMG_Init(imgFlags) & imgFlags))
 				{
 					printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+					success = false;
+				}
+				
+				//Initialize SDL_mixer
+				if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+				{
+					printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
 					success = false;
 				}
 			}
@@ -104,6 +117,22 @@ bool loadMedia()
 		success = false;
 	}
 
+	//Load music
+	gMusic = Mix_LoadMUS("Smusic.mp3");
+	if (gMusic == NULL)
+	{
+		printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
+		success = false;
+	}
+
+	//Load sound effects
+	gHigh = Mix_LoadWAV("Seffect.mp3");
+	if (gHigh == NULL)
+	{
+		printf("Failed to load high sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+		success = false;
+	}
+
 	return success;
 }
 
@@ -112,6 +141,14 @@ void close()
 	//Free loaded image
 	SDL_DestroyTexture(gTexture);
 	gTexture = NULL;
+
+	//Free the sound effects
+	Mix_FreeChunk(gHigh);
+	gHigh = NULL;
+
+	//Free the music
+	Mix_FreeMusic(gMusic);
+	gMusic = NULL;
 
 	//Destroy window
 	SDL_DestroyRenderer(gRenderer);
@@ -183,6 +220,47 @@ int main(int argc, char* args[])
 					if (e.type == SDL_QUIT)
 					{
 						quit = true;
+					}
+					//Handle key press
+					else if (e.type == SDL_KEYDOWN)
+					{
+						switch (e.key.keysym.sym)
+						{
+							//Play high sound effect
+						case SDLK_1:
+							Mix_PlayChannel(-1, gHigh, 0);
+							break;
+
+						case SDLK_9:
+							//If there is no music playing
+							if (Mix_PlayingMusic() == 0)
+							{
+								//Play the music
+								Mix_PlayMusic(gMusic, -1);
+							}
+							//If music is being played
+							else
+							{
+								//If the music is paused
+								if (Mix_PausedMusic() == 1)
+								{
+									//Resume the music
+									Mix_ResumeMusic();
+								}
+								//If the music is playing
+								else
+								{
+									//Pause the music
+									Mix_PauseMusic();
+								}
+							}
+							break;
+
+						case SDLK_0:
+							//Stop the music
+							Mix_HaltMusic();
+							break;
+						}
 					}
 				}
 
