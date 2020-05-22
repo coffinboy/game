@@ -1,1 +1,2 @@
-# Game Rắn săn mồi.
+# Game cho project BTL
+
