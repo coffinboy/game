@@ -5,10 +5,12 @@
 #include <stdio.h>
 #include <string>
 #include <SDL_mixer.h>
+#include <ctime>
+
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 900;
+const int SCREEN_HEIGHT = 400;
 
 //Texture wrapper class
 class LTexture
@@ -61,8 +63,8 @@ class Dot
 {
 public:
 	//The dimensions of the dot
-	static const int DOT_WIDTH = 20;
-	static const int DOT_HEIGHT = 20;
+	static const int DOT_WIDTH = 100;
+	static const int DOT_HEIGHT = 100;
 
 	//Maximum axis velocity of the dot
 	static const int DOT_VEL = 10;
@@ -78,6 +80,7 @@ public:
 
 	//Shows the dot on the screen
 	void render();
+	int health;
 
 private:
 	//The X and Y offsets of the dot
@@ -92,8 +95,8 @@ class ENEMY
 {
 public:
 	//The dimensions of the enemy
-	static const int ENEMY_WIDTH = 60;
-	static const int ENEMY_HEIGHT = 40;
+	static const int ENEMY_WIDTH = 150;
+	static const int ENEMY_HEIGHT = 150;
 
 	//Maximum axis velocity of the enemy
 	static const int ENEMY_VEL = 10;
@@ -139,6 +142,7 @@ SDL_Renderer* gRenderer = NULL;
 LTexture gDotTexture;
 LTexture gBGTexture;
 LTexture gENEMYTexture;
+LTexture gHealthTexture;
 //The music that will be played
 Mix_Music* gMusic = NULL;
 
@@ -308,7 +312,7 @@ ENEMY::ENEMY()
 	mPosY_E = 0;
 
 	//Initialize the velocity
-	mVelX_E = 2;
+	mVelX_E = 0;
 	mVelY_E = 0;
 }
 
@@ -361,7 +365,22 @@ void Dot::move()
 		//Move back
 		mPosY -= mVelY;
 	}
-
+	if (mPosX < 0)
+	{
+		mPosX = 0;
+	}
+	if (mPosX > SCREEN_WIDTH)
+	{
+		mPosX = SCREEN_WIDTH;
+	}
+	if (mPosY < 0)
+	{
+		mPosY = 0;
+	}
+	if (mPosY > SCREEN_HEIGHT)
+	{
+		mPosY = SCREEN_HEIGHT;
+	}
 }
 
 void ENEMY::move()
@@ -370,13 +389,13 @@ void ENEMY::move()
 	mPosX_E += mVelX_E;
 
 	//If the dot went too far to the left or right
-	if ((mPosX_E < -ENEMY_WIDTH) || (mPosX_E + ENEMY_WIDTH > SCREEN_WIDTH))
+	/*if ((mPosX_E < -ENEMY_WIDTH) || (mPosX_E + ENEMY_WIDTH > SCREEN_WIDTH))
 	{
 		//Move back
 		mPosX_E -= mVelX_E;
-	}
+	}*/
 
-	//Move the dot up or down
+	/*//Move the dot up or down
 	mPosY_E += mVelY_E;
 
 	//If the dot went too far up or down
@@ -384,6 +403,11 @@ void ENEMY::move()
 	{
 		//Move back
 		mPosY_E -= mVelY_E;
+	}*/
+	if (mPosX_E < -150)
+	{
+		mPosX_E = SCREEN_WIDTH;
+		mVelX_E = -(rand() % 10 + 1);
 	}
 
 }
@@ -392,6 +416,7 @@ void Dot::render()
 {
 	//Show the dot
 	gDotTexture.render(mPosX, mPosY);
+	gHealthTexture.render(mPosX, mPosY+80);
 }
 
 void ENEMY::render()
@@ -467,9 +492,16 @@ bool loadMedia()
 	bool success = true;
 
 	//Load dot texture
-	if (!gDotTexture.loadFromFile("dot.bmp"))
+	if (!gDotTexture.loadFromFile("player.png"))
 	{
 		printf("Failed to load dot texture!\n");
+		success = false;
+	}
+	
+	//Load dot texture
+	if (!gHealthTexture.loadFromFile("FullHP.png"))
+	{
+		printf("Failed to load health texture!\n");
 		success = false;
 	}
 
@@ -480,9 +512,9 @@ bool loadMedia()
 		success = false;
 	}
 	//Load enenies texture
-	if (!gENEMYTexture.loadFromFile("foo.png"))
+	if (!gENEMYTexture.loadFromFile("meteorite.png"))
 	{
-		printf("Failed to load prompt texture!\n");
+		printf("Failed to load enemy texture!\n");
 		success = false;
 	}
 	//Load music
@@ -520,6 +552,7 @@ void close()
 
 int main(int argc, char* args[])
 {
+	srand(time(NULL));
 	//Start up SDL and create window
 	if (!init())
 	{
@@ -543,13 +576,23 @@ int main(int argc, char* args[])
 			//The dot that will be moving around on the screen
 			Dot dot;
 
-			ENEMY enemy;
+			ENEMY enemy1;
 			ENEMY enemy2;
-			enemy.mPosX_E = enemy.mPosY_E = 30;
-			enemy2.mPosX_E = 30; 
-			enemy2.mPosY_E = 60;
-			enemy.mVelX_E = 2;
-			enemy2.mVelX_E = 4;
+			ENEMY enemy3;
+			ENEMY enemy4;
+			enemy1.mPosX_E  = 840;
+			enemy1.mPosY_E  = 0;
+			enemy2.mPosX_E = 840; 
+			enemy2.mPosY_E = 100;
+			enemy3.mPosX_E = 840;
+			enemy3.mPosY_E = 200;
+			enemy4.mPosX_E = 840;
+			enemy4.mPosY_E = 300;
+			enemy1.mVelX_E = -(rand() % 10 + 1);
+			enemy2.mVelX_E = -(rand() % 10 + 1);
+			enemy3.mVelX_E = -(rand() % 10 + 1);
+			enemy4.mVelX_E = -(rand() % 10 + 1);
+			
 			//The background scrolling offset
 			int scrollingOffset = 0;
 
@@ -559,6 +602,7 @@ int main(int argc, char* args[])
 			//While application is running
 			while (!quit)
 			{
+
 				//Handle events on queue
 				while (SDL_PollEvent(&e) != 0)
 				{
@@ -571,12 +615,15 @@ int main(int argc, char* args[])
 					//Handle input for the dot
 					dot.handleEvent(e);
 				}
-
+				
+				
 				//Move the dot
 				dot.move();
 				//Move the enemy
-				enemy.move();
+				enemy1.move();
 				enemy2.move();
+				enemy3.move();
+				enemy4.move();
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
@@ -588,8 +635,10 @@ int main(int argc, char* args[])
 				//Render objects
 				dot.render();
 				//Render objects
-				enemy.render();
+				enemy1.render();
 				enemy2.render();
+				enemy3.render();
+				enemy4.render();
 				//Render prompt
 				//gENEMYTexture.render(30,30);
 				//Update screen
