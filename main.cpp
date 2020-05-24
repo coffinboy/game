@@ -7,6 +7,7 @@
 #include <SDL_mixer.h>
 #include <ctime>
 #include <iostream>
+#include <SDL_ttf.h>
 
 using namespace std;
 
@@ -27,10 +28,10 @@ public:
 	//Loads image at specified path
 	bool loadFromFile(std::string path);
 
-#if defined(_SDL_TTF_H) || defined(SDL_TTF_H)
+
 	//Creates image from font string
 	bool loadFromRenderedText(std::string textureText, SDL_Color textColor);
-#endif
+
 
 	//Deallocates texture
 	void free();
@@ -65,7 +66,7 @@ class Dot
 {
 public:
 	//The dimensions of the dot
-	static const int DOT_WIDTH = 95;
+	static const int DOT_WIDTH = 96;
 	static const int DOT_HEIGHT = 100;
 
 	//Maximum axis velocity of the dot
@@ -75,17 +76,17 @@ public:
 	Dot();
 
 	//Takes key presses and adjusts the dot's velocity
-	void handleEvent(SDL_Event& e);
+	void handleEvent(SDL_Event& e,bool GameOver);
 
 	//Moves the dot
 	void move();
 
 	//Shows the dot on the screen
 	void render();
-	int health;
 	int mPosX, mPosY;
 	int mVelX, mVelY;
 	void collusion(int x , int y);
+	int health;
 	//void Collision(int mPosX, int mPosY, int mPosX_E, int mPosY_E, bool& isRandomized);
 	
 
@@ -146,11 +147,19 @@ SDL_Window* gWindow = NULL;
 //The window renderer
 SDL_Renderer* gRenderer = NULL;
 
+//Globally used font
+TTF_Font* gFont = NULL;
+
 //Scene textures
 LTexture gDotTexture;
 LTexture gBGTexture;
 LTexture gENEMYTexture;
-LTexture gHealthTexture;
+LTexture gFullHP;
+LTexture g23HP;
+LTexture g13HP;
+LTexture g0HP;
+LTexture gText;
+LTexture gGameOver;
 //The music that will be played
 Mix_Music* gMusic = NULL;
 
@@ -209,8 +218,8 @@ bool LTexture::loadFromFile(std::string path)
 	return mTexture != NULL;
 }
 
-#if defined(_SDL_TTF_H) || defined(SDL_TTF_H)
-bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
+
+bool LTexture::loadFromRenderedText(string textureText, SDL_Color textColor)
 {
 	//Get rid of preexisting texture
 	free();
@@ -244,7 +253,6 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 	//Return success
 	return mTexture != NULL;
 }
-#endif
 
 void LTexture::free()
 {
@@ -302,12 +310,20 @@ int LTexture::getHeight()
 	return mHeight;
 }
 
+void runtime(int time)
+{
+	SDL_Color white = { 255, 255, 255 };
+	gText.loadFromRenderedText((string("TIME:") + to_string(time)).c_str(), white);
+	gText.render(400, 10);
+
+}
+
 Dot::Dot()
 {
 	//Initialize the offsets
 	mPosX = 0;
 	mPosY = 0;
-
+	health = 96;
 	//Initialize the velocity
 	mVelX = 0;
 	mVelY = 0;
@@ -324,32 +340,41 @@ ENEMY::ENEMY()
 	mVelY_E = 0;
 }
 
-void Dot::handleEvent(SDL_Event& e)
+void Dot::handleEvent(SDL_Event& e,bool GameOver)
 {
-	//If a key was pressed
-	if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+	if (GameOver) 
 	{
-		//Adjust the velocity
-		switch (e.key.keysym.sym)
-		{
-		
-		case SDLK_UP: mVelY -= DOT_VEL; break;
-		case SDLK_DOWN: mVelY += DOT_VEL; break;
-		case SDLK_LEFT: mVelX -= DOT_VEL; break;
-		case SDLK_RIGHT: mVelX += DOT_VEL; break;
-		}
+		mVelX = 0;
+		mVelY = 0;
 	}
-	//If a key was released
-	else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+	else
 	{
-		//Adjust the velocity
-		switch (e.key.keysym.sym)
+		//If a key was pressed
+		if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
 		{
-		
-		case SDLK_UP: mVelY += DOT_VEL; break;
-		case SDLK_DOWN: mVelY -= DOT_VEL; break;
-		case SDLK_LEFT: mVelX += DOT_VEL; break;
-		case SDLK_RIGHT: mVelX -= DOT_VEL; break;
+			//Adjust the velocity
+			switch (e.key.keysym.sym)
+			{
+			case SDLK_UP: mPosY -= DOT_HEIGHT; break;
+			case SDLK_DOWN: mPosY += DOT_HEIGHT; break;
+				//case SDLK_UP: mVelY -= DOT_VEL; break;
+				//case SDLK_DOWN: mVelY += DOT_VEL; break;
+			case SDLK_LEFT: mVelX -= DOT_VEL; break;
+			case SDLK_RIGHT: mVelX += DOT_VEL; break;
+			}
+		}
+		//If a key was released
+		else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+		{
+			//Adjust the velocity
+			switch (e.key.keysym.sym)
+			{
+
+				//case SDLK_UP: mVelY += DOT_VEL; break;
+				//case SDLK_DOWN: mVelY -= DOT_VEL; break;
+			case SDLK_LEFT: mVelX += DOT_VEL; break;
+			case SDLK_RIGHT: mVelX -= DOT_VEL; break;
+			}
 		}
 	}
 }
@@ -368,7 +393,7 @@ void Dot::move()
 
 	//Move the dot up or down
 	mPosY += mVelY;
-
+	
 	//If the dot went too far up or down
 	if ((mPosY < -DOT_HEIGHT) || (mPosY + DOT_HEIGHT > SCREEN_HEIGHT))
 	{
@@ -387,9 +412,9 @@ void Dot::move()
 	{
 		mPosY = 0;
 	}
-	if (mPosY > SCREEN_HEIGHT)
+	if (mPosY > SCREEN_HEIGHT-100)
 	{
-		mPosY = SCREEN_HEIGHT;
+		mPosY = SCREEN_HEIGHT-100;
 	}
 }
 
@@ -422,29 +447,48 @@ void ENEMY::move()
 	}
 
 }
-
-
+int dem = 0;
 void Dot::collusion(int x, int y)
 {
+	
 	if (mPosY >= y && mPosY  <= y + 80)
 	{
 		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
 		{
-			cout << 1 << endl;
+			dem++;
+			if (dem > 25)
+			{
+				dem = 0;
+				health = health - 32;
+			}
 		}
 	}
 	if (mPosY+50 >= y && mPosY+50 <= y + 105)
 	{
 		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
 		{
-			cout << 2 << endl;
+
+			dem++;
+			if (dem > 25)
+			{
+				dem = 0;
+				health = health - 32;
+			}
+			
 		}
 	}
 	if (mPosY +50>= y && mPosY+50 <= y + 105)
 	{
 		if (mPosX >= x && mPosX <= x + 115)
 		{
-			cout << 3 << endl;
+
+			dem++;
+			if (dem > 25)
+			{
+				dem = 0;
+				health = health - 32;
+			}
+			
 		}
 	}
 	
@@ -464,7 +508,22 @@ void Dot::render()
 {
 	//Show the dot
 	gDotTexture.render(mPosX, mPosY);
-	gHealthTexture.render(mPosX, mPosY+80);
+	if (health == 96)
+	{
+		gFullHP.render(mPosX, mPosY + 80);
+	}
+	if (health >= 64 && health < 96)
+	{
+		g23HP.render(mPosX, mPosY + 80);
+	}
+	if (health >= 32 && health < 64)
+	{
+		g13HP.render(mPosX, mPosY + 80);
+	}
+	if (health >= 0 && health < 32)
+	{
+		g0HP.render(mPosX, mPosY + 80);
+	}
 }
 
 void ENEMY::render()
@@ -527,6 +586,12 @@ bool init()
 					printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
 					success = false;
 				}
+				//Initialize SDL_ttf;
+				if (TTF_Init() == -1)
+				{
+					printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+					success = false;
+				}
 			}
 		}
 	}
@@ -545,13 +610,6 @@ bool loadMedia()
 		printf("Failed to load dot texture!\n");
 		success = false;
 	}
-	
-	//Load dot texture
-	if (!gHealthTexture.loadFromFile("FullHP.png"))
-	{
-		printf("Failed to load health texture!\n");
-		success = false;
-	}
 
 	//Load background texture
 	if (!gBGTexture.loadFromFile("bkground.png"))
@@ -565,6 +623,27 @@ bool loadMedia()
 		printf("Failed to load enemy texture!\n");
 		success = false;
 	}
+	//Load healthbar texture
+	if (!gFullHP.loadFromFile("FullHP.png"))
+	{
+		printf("Failed to load enemy texture!\n");
+		success = false;
+	}
+	if (!g23HP.loadFromFile("23HP.png"))
+	{
+		printf("Failed to load enemy texture!\n");
+		success = false;
+	}
+	if (!g13HP.loadFromFile("13HP.png"))
+	{
+		printf("Failed to load enemy texture!\n");
+		success = false;
+	}
+	if (!g0HP.loadFromFile("0HP.png"))
+	{
+		printf("Failed to load enemy texture!\n");
+		success = false;
+	}
 	//Load music
 	gMusic = Mix_LoadMUS("Smusic.mp3");
 	if (gMusic == NULL)
@@ -572,7 +651,20 @@ bool loadMedia()
 		printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
 		success = false;
 	}
-
+	//load font
+	gFont = TTF_OpenFont("font.ttf", 30);
+	if (gFont == NULL)
+	{
+		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
+		//SDL_Delay(5000);
+		success = false;
+	}
+	//load gameover texture
+	if (!gGameOver.loadFromFile("gameover.png"))
+	{
+		printf("Failed to load gameover texture!\n");
+		success = false;
+	}
 	return success;
 }
 
@@ -640,12 +732,13 @@ int main(int argc, char* args[])
 			enemy2.mVelX_E = -(rand() % 10 + 1);
 			enemy3.mVelX_E = -(rand() % 10 + 1);
 			enemy4.mVelX_E = -(rand() % 10 + 1);
+			bool GameOver = false;
 			//The background scrolling offset
 			int scrollingOffset = 0;
 
 			//start the backgroundSound
 			Mix_PlayMusic(gMusic, -1);
-
+			Uint32 Timerun;
 			//While application is running
 			while (!quit)
 			{
@@ -660,7 +753,7 @@ int main(int argc, char* args[])
 					}
 
 					//Handle input for the dot
-					dot.handleEvent(e);
+					dot.handleEvent(e,GameOver);
 				}
 				
 				
@@ -675,7 +768,6 @@ int main(int argc, char* args[])
 				dot.collusion(enemy2.mPosX_E, enemy2.mPosY_E);
 				dot.collusion(enemy3.mPosX_E, enemy3.mPosY_E);
 				dot.collusion(enemy4.mPosX_E, enemy4.mPosY_E);
-				
 				cout << 0<<endl;
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -691,6 +783,30 @@ int main(int argc, char* args[])
 				enemy2.render();
 				enemy3.render();
 				enemy4.render();
+				if (!GameOver) 
+				{
+					
+					Uint32 Timevalue = SDL_GetTicks();
+					Timerun = Timevalue / 1000;
+					runtime(Timerun);
+				}
+				if (dot.health == 0)
+				{
+					GameOver = true;
+				}
+				if (GameOver) 
+				{ 
+					gGameOver.render((SCREEN_WIDTH - gGameOver.getWidth()) / 2, 30); 
+					dot.mPosX = 0;
+					dot.mPosY = 0;
+					enemy1.mVelX_E = 0;
+					enemy2.mVelX_E = 0;
+					enemy3.mVelX_E = 0;
+					enemy4.mVelX_E = 0;
+					gText.loadFromRenderedText((string("lifetime : ") + to_string(Timerun)).c_str(), { 255, 0, 0 });
+					gText.render((SCREEN_WIDTH - gText.getWidth()) / 2, 250);
+				}
+				
 				//Render prompt
 				//gENEMYTexture.render(30,30);
 				//Update screen
