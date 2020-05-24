@@ -6,7 +6,9 @@
 #include <string>
 #include <SDL_mixer.h>
 #include <ctime>
+#include <iostream>
 
+using namespace std;
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 900;
@@ -63,7 +65,7 @@ class Dot
 {
 public:
 	//The dimensions of the dot
-	static const int DOT_WIDTH = 100;
+	static const int DOT_WIDTH = 95;
 	static const int DOT_HEIGHT = 100;
 
 	//Maximum axis velocity of the dot
@@ -81,22 +83,28 @@ public:
 	//Shows the dot on the screen
 	void render();
 	int health;
+	int mPosX, mPosY;
+	int mVelX, mVelY;
+	void collusion(int x , int y);
+	//void Collision(int mPosX, int mPosY, int mPosX_E, int mPosY_E, bool& isRandomized);
+	
 
 private:
 	//The X and Y offsets of the dot
-	int mPosX, mPosY;
+	//int mPosX, mPosY;
 
 	//The velocity of the dot
-	int mVelX, mVelY;
+	//int mVelX, mVelY;
 };
 
+static const int ENEMY_WIDTH = 115;
+static const int ENEMY_HEIGHT = 110;
 //The enemy that will move around on the screen
 class ENEMY
 {
 public:
 	//The dimensions of the enemy
-	static const int ENEMY_WIDTH = 150;
-	static const int ENEMY_HEIGHT = 150;
+	
 
 	//Maximum axis velocity of the enemy
 	static const int ENEMY_VEL = 10;
@@ -297,8 +305,8 @@ int LTexture::getHeight()
 Dot::Dot()
 {
 	//Initialize the offsets
-	mPosX = 200;
-	mPosY = 20;
+	mPosX = 0;
+	mPosY = 0;
 
 	//Initialize the velocity
 	mVelX = 0;
@@ -324,6 +332,7 @@ void Dot::handleEvent(SDL_Event& e)
 		//Adjust the velocity
 		switch (e.key.keysym.sym)
 		{
+		
 		case SDLK_UP: mVelY -= DOT_VEL; break;
 		case SDLK_DOWN: mVelY += DOT_VEL; break;
 		case SDLK_LEFT: mVelX -= DOT_VEL; break;
@@ -336,6 +345,7 @@ void Dot::handleEvent(SDL_Event& e)
 		//Adjust the velocity
 		switch (e.key.keysym.sym)
 		{
+		
 		case SDLK_UP: mVelY += DOT_VEL; break;
 		case SDLK_DOWN: mVelY -= DOT_VEL; break;
 		case SDLK_LEFT: mVelX += DOT_VEL; break;
@@ -404,6 +414,7 @@ void ENEMY::move()
 		//Move back
 		mPosY_E -= mVelY_E;
 	}*/
+	//Create random speed for enemies after they reach the screen border
 	if (mPosX_E < -150)
 	{
 		mPosX_E = SCREEN_WIDTH;
@@ -411,6 +422,43 @@ void ENEMY::move()
 	}
 
 }
+
+
+void Dot::collusion(int x, int y)
+{
+	if (mPosY >= y && mPosY  <= y + 80)
+	{
+		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
+		{
+			cout << 1 << endl;
+		}
+	}
+	if (mPosY+50 >= y && mPosY+50 <= y + 105)
+	{
+		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
+		{
+			cout << 2 << endl;
+		}
+	}
+	if (mPosY +50>= y && mPosY+50 <= y + 105)
+	{
+		if (mPosX >= x && mPosX <= x + 115)
+		{
+			cout << 3 << endl;
+		}
+	}
+	
+}
+
+
+/*void Dot::Collision(int mPosX, int mPosY, int mPosX_E, int mPosY_E, bool& isRandomized)
+{
+	if ((mPosX <= mPosX_E + ENEMY_WIDTH  && mPosX >= mPosX_E - ENEMY_WIDTH) && (mPosY <= mPosY_E + ENEMY_HEIGHT && mPosY >= mPosY_E - ENEMY_HEIGHT)) {
+		//score++;
+		cout << "1" << endl;
+		isRandomized = false;
+	}*/
+//}
 
 void Dot::render()
 {
@@ -445,7 +493,7 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		gWindow = SDL_CreateWindow("Superman Dodge", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if (gWindow == NULL)
 		{
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
@@ -512,7 +560,7 @@ bool loadMedia()
 		success = false;
 	}
 	//Load enenies texture
-	if (!gENEMYTexture.loadFromFile("meteorite.png"))
+	if (!gENEMYTexture.loadFromFile("meteorite1.png"))
 	{
 		printf("Failed to load enemy texture!\n");
 		success = false;
@@ -592,7 +640,6 @@ int main(int argc, char* args[])
 			enemy2.mVelX_E = -(rand() % 10 + 1);
 			enemy3.mVelX_E = -(rand() % 10 + 1);
 			enemy4.mVelX_E = -(rand() % 10 + 1);
-			
 			//The background scrolling offset
 			int scrollingOffset = 0;
 
@@ -624,6 +671,12 @@ int main(int argc, char* args[])
 				enemy2.move();
 				enemy3.move();
 				enemy4.move();
+				dot.collusion(enemy1.mPosX_E, enemy1.mPosY_E);
+				dot.collusion(enemy2.mPosX_E, enemy2.mPosY_E);
+				dot.collusion(enemy3.mPosX_E, enemy3.mPosY_E);
+				dot.collusion(enemy4.mPosX_E, enemy4.mPosY_E);
+				
+				cout << 0<<endl;
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
@@ -634,7 +687,6 @@ int main(int argc, char* args[])
 
 				//Render objects
 				dot.render();
-				//Render objects
 				enemy1.render();
 				enemy2.render();
 				enemy3.render();
