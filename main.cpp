@@ -85,17 +85,12 @@ public:
 	void render();
 	int mPosX, mPosY;
 	int mVelX, mVelY;
-	void collusion(int x , int y);
+	void collision(int x , int y);
 	int health;
-	//void Collision(int mPosX, int mPosY, int mPosX_E, int mPosY_E, bool& isRandomized);
 	
 
 private:
-	//The X and Y offsets of the dot
-	//int mPosX, mPosY;
-
-	//The velocity of the dot
-	//int mVelX, mVelY;
+	
 };
 
 static const int ENEMY_WIDTH = 115;
@@ -125,11 +120,6 @@ public:
 	//The velocity of the enemy
 	int mVelX_E, mVelY_E;
 private:
-	/*//The X and Y offsets of the enemy
-	int mPosX_E, mPosY_E;
-
-	//The velocity of the enemy
-	int mVelX_E, mVelY_E;*/
 };
 
 //Starts up SDL and creates window
@@ -150,7 +140,7 @@ SDL_Renderer* gRenderer = NULL;
 //Globally used font
 TTF_Font* gFont = NULL;
 
-//Scene textures
+//textures
 LTexture gDotTexture;
 LTexture gBGTexture;
 LTexture gENEMYTexture;
@@ -357,8 +347,6 @@ void Dot::handleEvent(SDL_Event& e,bool GameOver)
 			{
 			case SDLK_UP: mPosY -= DOT_HEIGHT; break;
 			case SDLK_DOWN: mPosY += DOT_HEIGHT; break;
-				//case SDLK_UP: mVelY -= DOT_VEL; break;
-				//case SDLK_DOWN: mVelY += DOT_VEL; break;
 			case SDLK_LEFT: mVelX -= DOT_VEL; break;
 			case SDLK_RIGHT: mVelX += DOT_VEL; break;
 			}
@@ -369,9 +357,6 @@ void Dot::handleEvent(SDL_Event& e,bool GameOver)
 			//Adjust the velocity
 			switch (e.key.keysym.sym)
 			{
-
-				//case SDLK_UP: mVelY += DOT_VEL; break;
-				//case SDLK_DOWN: mVelY -= DOT_VEL; break;
 			case SDLK_LEFT: mVelX += DOT_VEL; break;
 			case SDLK_RIGHT: mVelX -= DOT_VEL; break;
 			}
@@ -423,22 +408,6 @@ void ENEMY::move()
 	//Move the dot left or right
 	mPosX_E += mVelX_E;
 
-	//If the dot went too far to the left or right
-	/*if ((mPosX_E < -ENEMY_WIDTH) || (mPosX_E + ENEMY_WIDTH > SCREEN_WIDTH))
-	{
-		//Move back
-		mPosX_E -= mVelX_E;
-	}*/
-
-	/*//Move the dot up or down
-	mPosY_E += mVelY_E;
-
-	//If the dot went too far up or down
-	if ((mPosY_E < -ENEMY_HEIGHT) || (mPosY_E + ENEMY_HEIGHT > SCREEN_HEIGHT))
-	{
-		//Move back
-		mPosY_E -= mVelY_E;
-	}*/
 	//Create random speed for enemies after they reach the screen border
 	if (mPosX_E < -150)
 	{
@@ -448,7 +417,7 @@ void ENEMY::move()
 
 }
 int dem = 0;
-void Dot::collusion(int x, int y)
+void Dot::collision(int x, int y)
 {
 	
 	if (mPosY >= y && mPosY  <= y + 80)
@@ -476,10 +445,7 @@ void Dot::collusion(int x, int y)
 			}
 			
 		}
-	}
-	if (mPosY +50>= y && mPosY+50 <= y + 105)
-	{
-		if (mPosX >= x && mPosX <= x + 115)
+		else if (mPosX >= x && mPosX <= x + 115)
 		{
 
 			dem++;
@@ -488,21 +454,9 @@ void Dot::collusion(int x, int y)
 				dem = 0;
 				health = health - 32;
 			}
-			
 		}
-	}
-	
+	}	
 }
-
-
-/*void Dot::Collision(int mPosX, int mPosY, int mPosX_E, int mPosY_E, bool& isRandomized)
-{
-	if ((mPosX <= mPosX_E + ENEMY_WIDTH  && mPosX >= mPosX_E - ENEMY_WIDTH) && (mPosY <= mPosY_E + ENEMY_HEIGHT && mPosY >= mPosY_E - ENEMY_HEIGHT)) {
-		//score++;
-		cout << "1" << endl;
-		isRandomized = false;
-	}*/
-//}
 
 void Dot::render()
 {
@@ -656,7 +610,6 @@ bool loadMedia()
 	if (gFont == NULL)
 	{
 		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
-		//SDL_Delay(5000);
 		success = false;
 	}
 	//load gameover texture
@@ -692,7 +645,7 @@ void close()
 
 int main(int argc, char* args[])
 {
-	srand(time(NULL));
+	srand(time(NULL));	
 	//Start up SDL and create window
 	if (!init())
 	{
@@ -764,11 +717,11 @@ int main(int argc, char* args[])
 				enemy2.move();
 				enemy3.move();
 				enemy4.move();
-				dot.collusion(enemy1.mPosX_E, enemy1.mPosY_E);
-				dot.collusion(enemy2.mPosX_E, enemy2.mPosY_E);
-				dot.collusion(enemy3.mPosX_E, enemy3.mPosY_E);
-				dot.collusion(enemy4.mPosX_E, enemy4.mPosY_E);
-				cout << 0<<endl;
+				dot.collision(enemy1.mPosX_E, enemy1.mPosY_E);
+				dot.collision(enemy2.mPosX_E, enemy2.mPosY_E);
+				dot.collision(enemy3.mPosX_E, enemy3.mPosY_E);
+				dot.collision(enemy4.mPosX_E, enemy4.mPosY_E);
+				
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
@@ -807,8 +760,7 @@ int main(int argc, char* args[])
 					gText.render((SCREEN_WIDTH - gText.getWidth()) / 2, 250);
 				}
 				
-				//Render prompt
-				//gENEMYTexture.render(30,30);
+				
 				//Update screen
 				SDL_RenderPresent(gRenderer);
 			}
