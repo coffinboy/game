@@ -16,7 +16,7 @@ const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 400;
 
 //Texture wrapper class
-class LTexture
+class LTexture //copy tren lazyfoo (19-62)
 {
 public:
 	//Initializes variables
@@ -153,19 +153,19 @@ LTexture gGameOver;
 //The music that will be played
 Mix_Music* gMusic = NULL;
 
-LTexture::LTexture()
+LTexture::LTexture()	//copy lazyfoo (156-301)
 {
 	//Initialize
 	mTexture = NULL;
 	mWidth = 0;
 	mHeight = 0;
-}
+}	
 
 LTexture::~LTexture()
 {
 	//Deallocate
 	free();
-}
+} 
 
 bool LTexture::loadFromFile(std::string path)
 {
@@ -299,7 +299,7 @@ int LTexture::getHeight()
 {
 	return mHeight;
 }
-
+//hien thoi gian
 void runtime(int time)
 {
 	SDL_Color white = { 255, 255, 255 };
@@ -313,6 +313,7 @@ Dot::Dot()
 	//Initialize the offsets
 	mPosX = 0;
 	mPosY = 0;
+	//gia tri cua health
 	health = 96;
 	//Initialize the velocity
 	mVelX = 0;
