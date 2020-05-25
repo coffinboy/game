@@ -385,18 +385,22 @@ void Dot::move()
 		//Move back
 		mPosY -= mVelY;
 	}
+	//border left
 	if (mPosX < 0)
 	{
 		mPosX = 0;
 	}
+	//border right
 	if (mPosX > SCREEN_WIDTH)
 	{
 		mPosX = SCREEN_WIDTH;
 	}
+	//border top
 	if (mPosY < 0)
 	{
 		mPosY = 0;
 	}
+	//border bottom
 	if (mPosY > SCREEN_HEIGHT-100)
 	{
 		mPosY = SCREEN_HEIGHT-100;
@@ -462,18 +466,22 @@ void Dot::render()
 {
 	//Show the dot
 	gDotTexture.render(mPosX, mPosY);
+	//FullHP condition
 	if (health == 96)
 	{
 		gFullHP.render(mPosX, mPosY + 80);
 	}
+	//2/3HP condition
 	if (health >= 64 && health < 96)
 	{
 		g23HP.render(mPosX, mPosY + 80);
 	}
+	//1/3HP condition
 	if (health >= 32 && health < 64)
 	{
 		g13HP.render(mPosX, mPosY + 80);
 	}
+	//0HP condition
 	if (health >= 0 && health < 32)
 	{
 		g0HP.render(mPosX, mPosY + 80);
@@ -645,7 +653,7 @@ void close()
 
 int main(int argc, char* args[])
 {
-	srand(time(NULL));	
+	srand(time(NULL));
 	//Start up SDL and create window
 	if (!init())
 	{
@@ -668,19 +676,21 @@ int main(int argc, char* args[])
 
 			//The dot that will be moving around on the screen
 			Dot dot;
-
+			//4 enemies
 			ENEMY enemy1;
 			ENEMY enemy2;
 			ENEMY enemy3;
 			ENEMY enemy4;
-			enemy1.mPosX_E  = 840;
-			enemy1.mPosY_E  = 0;
-			enemy2.mPosX_E = 840; 
+			//enemy spawn position
+			enemy1.mPosX_E = 840;
+			enemy1.mPosY_E = 0;
+			enemy2.mPosX_E = 840;
 			enemy2.mPosY_E = 100;
 			enemy3.mPosX_E = 840;
 			enemy3.mPosY_E = 200;
 			enemy4.mPosX_E = 840;
 			enemy4.mPosY_E = 300;
+			//enemy speed
 			enemy1.mVelX_E = -(rand() % 10 + 1);
 			enemy2.mVelX_E = -(rand() % 10 + 1);
 			enemy3.mVelX_E = -(rand() % 10 + 1);
@@ -706,10 +716,10 @@ int main(int argc, char* args[])
 					}
 
 					//Handle input for the dot
-					dot.handleEvent(e,GameOver);
+					dot.handleEvent(e, GameOver);
 				}
-				
-				
+
+
 				//Move the dot
 				dot.move();
 				//Move the enemy
@@ -721,7 +731,7 @@ int main(int argc, char* args[])
 				dot.collision(enemy2.mPosX_E, enemy2.mPosY_E);
 				dot.collision(enemy3.mPosX_E, enemy3.mPosY_E);
 				dot.collision(enemy4.mPosX_E, enemy4.mPosY_E);
-				
+
 				//Clear screen
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
@@ -736,20 +746,23 @@ int main(int argc, char* args[])
 				enemy2.render();
 				enemy3.render();
 				enemy4.render();
-				if (!GameOver) 
+				//when the game still running
+				if (!GameOver)
 				{
-					
+
 					Uint32 Timevalue = SDL_GetTicks();
 					Timerun = Timevalue / 1000;
 					runtime(Timerun);
 				}
+				//Game over condition
 				if (dot.health == 0)
 				{
 					GameOver = true;
 				}
-				if (GameOver) 
-				{ 
-					gGameOver.render((SCREEN_WIDTH - gGameOver.getWidth()) / 2, 30); 
+				//when the game over
+				if (GameOver)
+				{
+					gGameOver.render((SCREEN_WIDTH - gGameOver.getWidth()) / 2, 30);
 					dot.mPosX = 0;
 					dot.mPosY = 0;
 					enemy1.mVelX_E = 0;
@@ -759,8 +772,8 @@ int main(int argc, char* args[])
 					gText.loadFromRenderedText((string("lifetime : ") + to_string(Timerun)).c_str(), { 255, 0, 0 });
 					gText.render((SCREEN_WIDTH - gText.getWidth()) / 2, 250);
 				}
-				
-				
+
+
 				//Update screen
 				SDL_RenderPresent(gRenderer);
 			}
