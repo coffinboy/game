@@ -1,5 +1,4 @@
-
-
+﻿
 #include <SDL.h>
 #include <SDL_image.h>
 #include <stdio.h>
@@ -16,7 +15,7 @@ const int SCREEN_WIDTH = 900;
 const int SCREEN_HEIGHT = 400;
 
 //Texture wrapper class
-class LTexture //copy tren lazyfoo (19-62)
+class LTexture 
 {
 public:
 	//Initializes variables
@@ -76,7 +75,7 @@ public:
 	Dot();
 
 	//Takes key presses and adjusts the dot's velocity
-	void handleEvent(SDL_Event& e,bool GameOver);
+	void handleEvent(SDL_Event& e, bool GameOver);
 
 	//Moves the dot
 	void move();
@@ -85,22 +84,18 @@ public:
 	void render();
 	int mPosX, mPosY;
 	int mVelX, mVelY;
-	void collision(int x , int y);
+	void collision(int x, int y);
 	int health;
-	
-
-private:
-	
 };
 
-static const int ENEMY_WIDTH = 115;
-static const int ENEMY_HEIGHT = 110;
+
 //The enemy that will move around on the screen
 class ENEMY
 {
 public:
 	//The dimensions of the enemy
-	
+	static const int ENEMY_WIDTH = 115;
+	static const int ENEMY_HEIGHT = 110;
 
 	//Maximum axis velocity of the enemy
 	static const int ENEMY_VEL = 10;
@@ -150,22 +145,21 @@ LTexture g13HP;
 LTexture g0HP;
 LTexture gText;
 LTexture gGameOver;
-//The music that will be played
-Mix_Music* gMusic = NULL;
 
-LTexture::LTexture()	//copy lazyfoo (156-301)
+
+LTexture::LTexture()
 {
 	//Initialize
 	mTexture = NULL;
 	mWidth = 0;
 	mHeight = 0;
-}	
+}
 
 LTexture::~LTexture()
 {
 	//Deallocate
 	free();
-} 
+}
 
 bool LTexture::loadFromFile(std::string path)
 {
@@ -290,211 +284,6 @@ void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cen
 	SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
 }
 
-int LTexture::getWidth()
-{
-	return mWidth;
-}
-
-int LTexture::getHeight()
-{
-	return mHeight;
-}
-//hien thoi gian
-void runtime(int time)
-{
-	SDL_Color white = { 255, 255, 255 };
-	gText.loadFromRenderedText((string("TIME:") + to_string(time)).c_str(), white);
-	gText.render(400, 10);
-
-}
-
-Dot::Dot()
-{
-	//Initialize the offsets
-	mPosX = 0;
-	mPosY = 0;
-	//gia tri cua health
-	health = 96;
-	//Initialize the velocity
-	mVelX = 0;
-	mVelY = 0;
-}
-
-ENEMY::ENEMY()
-{
-	//Initialize the offsets
-	mPosX_E = 0;
-	mPosY_E = 0;
-
-	//Initialize the velocity
-	mVelX_E = 0;
-	mVelY_E = 0;
-}
-
-void Dot::handleEvent(SDL_Event& e,bool GameOver)
-{
-	if (GameOver) 
-	{
-		mVelX = 0;
-		mVelY = 0;
-	}
-	else
-	{
-		//If a key was pressed
-		if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
-		{
-			//Adjust the velocity
-			switch (e.key.keysym.sym)
-			{
-			case SDLK_UP: mPosY -= DOT_HEIGHT; break;
-			case SDLK_DOWN: mPosY += DOT_HEIGHT; break;
-			case SDLK_LEFT: mVelX -= DOT_VEL; break;
-			case SDLK_RIGHT: mVelX += DOT_VEL; break;
-			}
-		}
-		//If a key was released
-		else if (e.type == SDL_KEYUP && e.key.repeat == 0)
-		{
-			//Adjust the velocity
-			switch (e.key.keysym.sym)
-			{
-			case SDLK_LEFT: mVelX += DOT_VEL; break;
-			case SDLK_RIGHT: mVelX -= DOT_VEL; break;
-			}
-		}
-	}
-}
-
-void Dot::move()
-{
-	//Move the dot left or right
-	mPosX += mVelX;
-
-	//If the dot went too far to the left or right
-	if ((mPosX < -DOT_WIDTH) || (mPosX + DOT_WIDTH > SCREEN_WIDTH))
-	{
-		//Move back
-		mPosX -= mVelX;
-	}
-
-	//Move the dot up or down
-	mPosY += mVelY;
-	
-	//If the dot went too far up or down
-	if ((mPosY < -DOT_HEIGHT) || (mPosY + DOT_HEIGHT > SCREEN_HEIGHT))
-	{
-		//Move back
-		mPosY -= mVelY;
-	}
-	//border left
-	if (mPosX < 0)
-	{
-		mPosX = 0;
-	}
-	//border right
-	if (mPosX > SCREEN_WIDTH)
-	{
-		mPosX = SCREEN_WIDTH;
-	}
-	//border top
-	if (mPosY < 0)
-	{
-		mPosY = 0;
-	}
-	//border bottom
-	if (mPosY > SCREEN_HEIGHT-100)
-	{
-		mPosY = SCREEN_HEIGHT-100;
-	}
-}
-
-void ENEMY::move()
-{
-	//Move the dot left or right
-	mPosX_E += mVelX_E;
-
-	//Create random speed for enemies after they reach the screen border
-	if (mPosX_E < -150)
-	{
-		mPosX_E = SCREEN_WIDTH;
-		mVelX_E = -(rand() % 10 + 1);
-	}
-
-}
-int dem = 0;
-void Dot::collision(int x, int y)
-{
-	
-	if (mPosY >= y && mPosY  <= y + 80)
-	{
-		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
-		{
-			dem++;
-			if (dem > 25)
-			{
-				dem = 0;
-				health = health - 32;
-			}
-		}
-	}
-	if (mPosY+50 >= y && mPosY+50 <= y + 105)
-	{
-		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
-		{
-
-			dem++;
-			if (dem > 25)
-			{
-				dem = 0;
-				health = health - 32;
-			}
-			
-		}
-		else if (mPosX >= x && mPosX <= x + 115)
-		{
-
-			dem++;
-			if (dem > 25)
-			{
-				dem = 0;
-				health = health - 32;
-			}
-		}
-	}	
-}
-
-void Dot::render()
-{
-	//Show the dot
-	gDotTexture.render(mPosX, mPosY);
-	//FullHP condition
-	if (health == 96)
-	{
-		gFullHP.render(mPosX, mPosY + 80);
-	}
-	//2/3HP condition
-	if (health >= 64 && health < 96)
-	{
-		g23HP.render(mPosX, mPosY + 80);
-	}
-	//1/3HP condition
-	if (health >= 32 && health < 64)
-	{
-		g13HP.render(mPosX, mPosY + 80);
-	}
-	//0HP condition
-	if (health >= 0 && health < 32)
-	{
-		g0HP.render(mPosX, mPosY + 80);
-	}
-}
-
-void ENEMY::render()
-{
-	//Show the enemy
-	gENEMYTexture.render(mPosX_E, mPosY_E);
-}
-
 bool init()
 {
 	//Initialization flag
@@ -607,15 +396,8 @@ bool loadMedia()
 		printf("Failed to load enemy texture!\n");
 		success = false;
 	}
-	//Load music
-	gMusic = Mix_LoadMUS("Smusic.mp3");
-	if (gMusic == NULL)
-	{
-		printf("Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError());
-		success = false;
-	}
 	//load font
-	gFont = TTF_OpenFont("font.ttf", 30);
+	gFont = TTF_OpenFont("font.ttf", 25);
 	if (gFont == NULL)
 	{
 		printf("Failed to load font! SDL_ttf Error: %s\n", TTF_GetError());
@@ -630,27 +412,202 @@ bool loadMedia()
 	return success;
 }
 
-void close()
+
+void runtime(int time)
 {
-	//Free loaded images
-	gDotTexture.free();
-	gBGTexture.free();
-	gENEMYTexture.free();
-	//Free the music
-	Mix_FreeMusic(gMusic);
-	gMusic = NULL;
+	SDL_Color white = { 255, 255, 255 };
+	gText.loadFromRenderedText((string("TIME:") + to_string(time)).c_str(), white);
+	gText.render(400, 10);
 
-	//Destroy window	
-	SDL_DestroyRenderer(gRenderer);
-	SDL_DestroyWindow(gWindow);
-	gWindow = NULL;
-	gRenderer = NULL;
-
-	//Quit SDL subsystems
-	IMG_Quit();
-	Mix_Quit();
-	SDL_Quit();
 }
+int LTexture::getWidth()
+{
+	return mWidth;
+}
+
+int LTexture::getHeight()
+{
+	return mHeight;
+}
+
+
+Dot::Dot()
+{
+	//Initialize the offsets
+	mPosX = 0;
+	mPosY = 0;
+	//gia tri cua health
+	health = 96;
+	//Initialize the velocity
+	mVelX = 0;
+	mVelY = 0;
+}
+
+ENEMY::ENEMY()
+{
+	//Initialize the offsets
+	mPosX_E = 0;
+	mPosY_E = 0;
+
+	//Initialize the velocity
+	mVelX_E = 0;
+	mVelY_E = 0;
+}
+
+void Dot::handleEvent(SDL_Event& e, bool GameOver)
+{
+	if (GameOver)
+	{
+		mVelX = 0;
+		mVelY = 0;
+	}
+	else
+	{
+		//If a key was pressed
+		if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+		{
+			//Adjust the velocity
+			switch (e.key.keysym.sym)
+			{
+			case SDLK_UP: mPosY -= DOT_HEIGHT; break;
+			case SDLK_DOWN: mPosY += DOT_HEIGHT; break;
+			case SDLK_LEFT: mPosX -= DOT_HEIGHT; break;
+			case SDLK_RIGHT: mPosX += DOT_HEIGHT; break;
+			}
+		}
+	}
+}
+
+void Dot::move()
+{
+	//Move the dot left or right
+	mPosX += mVelX;
+
+	//If the dot went too far to the left or right
+	if ((mPosX < -DOT_WIDTH) || (mPosX + DOT_WIDTH > SCREEN_WIDTH))
+	{
+		//Move back
+		mPosX -= mVelX;
+	}
+
+	//Move the dot up or down
+	mPosY += mVelY;
+
+	//If the dot went too far up or down
+	if ((mPosY < -DOT_HEIGHT) || (mPosY + DOT_HEIGHT > SCREEN_HEIGHT))
+	{
+		//Move back
+		mPosY -= mVelY;
+	}
+	//border left
+	if (mPosX < 0)
+	{
+		mPosX = 0;
+	}
+	//border right
+	if (mPosX > SCREEN_WIDTH)
+	{
+		mPosX = SCREEN_WIDTH;
+	}
+	//border top
+	if (mPosY < 0)
+	{
+		mPosY = 0;
+	}
+	//border bottom
+	if (mPosY > SCREEN_HEIGHT - 100)
+	{
+		mPosY = SCREEN_HEIGHT - 100;
+	}
+}
+
+void ENEMY::move()
+{
+	//Move the dot left or right
+	mPosX_E += mVelX_E;
+
+	//Create random speed for enemies after they reach the screen border
+	if (mPosX_E < -150)
+	{
+		mPosX_E = SCREEN_WIDTH;
+		mVelX_E = -(rand() % 10 + 1);
+	}
+
+}
+int dem = 0;
+void Dot::collision(int x, int y)
+{
+
+	if (mPosY >= y && mPosY <= y + 80)
+	{
+		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
+		{
+			dem++;
+			if (dem > 30)
+			{
+				dem = 0;
+				health = health - 32;
+			}
+		}
+	}
+	if (mPosY + 50 >= y && mPosY + 50 <= y + 105)
+	{
+		if (mPosX + DOT_WIDTH >= x && mPosX + DOT_WIDTH <= x + 115)
+		{
+
+			dem++;
+			if (dem > 30)
+			{
+				dem = 0;
+				health = health - 32;
+			}
+
+		}
+		else if (mPosX >= x && mPosX <= x + 115)
+		{
+
+			dem++;
+			if (dem > 30)
+			{
+				dem = 0;
+				health = health - 32;
+			}
+		}
+	}
+}
+
+void Dot::render()
+{
+	//Show the dot
+	gDotTexture.render(mPosX, mPosY);
+	//FullHP condition
+	if (health == 96)
+	{
+		gFullHP.render(mPosX, mPosY + 80);
+	}
+	//2/3HP condition
+	if (health >= 64 && health < 96)
+	{
+		g23HP.render(mPosX, mPosY + 80);
+	}
+	//1/3HP condition
+	if (health >= 32 && health < 64)
+	{
+		g13HP.render(mPosX, mPosY + 80);
+	}
+	//0HP condition
+	if (health >= 0 && health < 32)
+	{
+		g0HP.render(mPosX, mPosY + 80);
+	}
+}
+
+void ENEMY::render()
+{
+	//Show the enemy
+	gENEMYTexture.render(mPosX_E, mPosY_E);
+}
+
 
 int main(int argc, char* args[])
 {
@@ -700,8 +657,6 @@ int main(int argc, char* args[])
 			//The background scrolling offset
 			int scrollingOffset = 0;
 
-			//start the backgroundSound
-			Mix_PlayMusic(gMusic, -1);
 			Uint32 Timerun;
 			//While application is running
 			while (!quit)
@@ -785,4 +740,23 @@ int main(int argc, char* args[])
 	close();
 
 	return 0;
+}
+
+void close()
+{
+	//Free loaded images
+	gDotTexture.free();
+	gBGTexture.free();
+	gENEMYTexture.free();
+
+	//Destroy window	
+	SDL_DestroyRenderer(gRenderer);
+	SDL_DestroyWindow(gWindow);
+	gWindow = NULL;
+	gRenderer = NULL;
+
+	//Quit SDL subsystems
+	IMG_Quit();
+	Mix_Quit();
+	SDL_Quit();
 }
